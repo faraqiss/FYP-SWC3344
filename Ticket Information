@@ -1,0 +1,94 @@
+/**
+ * Description: To design and develop a Java application for a Theme Park Ride Ticketing System.
+ * GroupMate: FARAH NUR QISTINA BINTI MOHD ZAIDI, AHMAD ZUHAIRIE BIN MD ZAIDI, SITI ZULAIKHA BINTI MARKHALIM
+ * StudentId: AM2211012780, AM2211012824, AM2211012908
+ * Date: 8/11/2023
+ */
+
+// Import statements
+import java.io.*;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.Stack;
+
+public class TicketInformation {
+    
+    // Define the attributes
+    private int numOfTix;
+    private String rideName;
+    private double ticketPrice;
+    private String purchaseDate;
+    private String ticketType;
+    private double totalPayment;
+    
+    // Constructor to initialize ticket information.
+    public TicketInformation(int numOfTix, String rideName, double ticketPrice, String purchaseDate, String ticketType, double totalPayment) {
+        this.numOfTix = numOfTix;
+        this.rideName = rideName;
+        this.ticketPrice = ticketPrice;
+        this.purchaseDate = purchaseDate;
+        this.ticketType = ticketType;
+        this.totalPayment = totalPayment;
+    }
+
+    // Methods to set and get ticket attributes.
+    public void setnumOfTix (int ticketId) 
+    {
+        this.numOfTix = numOfTix;
+    }
+
+    public void setrideName (String rideName) 
+    {
+        this.rideName = rideName;
+    }
+
+    public void setticketPrice (double ticketPrice) 
+    {
+        this.ticketPrice = ticketPrice;
+    }
+
+    public void setpurchaseDate (String purchaseDate) 
+    {
+        this.purchaseDate = purchaseDate;
+    }
+
+    public void setticketType (String ticketType) 
+    {
+        this.ticketType = ticketType;
+    }
+    
+    public void settotalPayment (double totalPayment) 
+    {
+        this.ticketType = ticketType;
+    }
+
+    public int getnumOfTix ()
+    {
+        return numOfTix;
+    }
+
+    public String getrideName ()
+    {
+        return rideName;
+    }
+
+    public double getticketPrice ()
+    {
+        return ticketPrice;
+    }
+
+    public String getpurchaseDate ()
+    {
+        return purchaseDate;
+    }
+
+    public String getticketType ()
+    {
+        return ticketType;
+    }
+    
+    public double gettotalPayment ()
+    {
+        return totalPayment;
+    }
+}
