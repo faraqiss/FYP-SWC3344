@@ -1,0 +1,600 @@
+
+/**
+ * Description: To design and develop a Java application for a Theme Park Ride Ticketing System.
+ * GroupMate: FARAH NUR QISTINA BINTI MOHD ZAIDI, AHMAD ZUHAIRIE BIN MD ZAIDI, SITI ZULAIKHA BINTI MARKHALIM
+ * StudentId: AM2211012780, AM2211012824, AM2211012908
+ * Date: 8/11/2023
+ */
+
+// Import statements
+import javax.swing.*; // GUI components 
+import java.awt.*; 
+import java.awt.event.ActionEvent; 
+import java.awt.event.ActionListener; 
+import java.io.BufferedReader; // File reading
+import java.io.FileReader; 
+import java.io.FileWriter; // Writing characters to a file
+import java.io.IOException; // Handling input/output 
+import java.util.LinkedList; // Implementing linked lists
+import java.util.Queue; // Queue interface for defining a linear data structure
+import java.util.Stack; // Stack for implementing a stack data structure
+import java.util.StringTokenizer; // Breaking a string into tokens 
+
+public class ThemeParkTicketingSystem 
+{
+    // Define various data structures for managing customer data
+    private static LinkedList<CustomerInformation> customerList = new LinkedList<>();
+    private static Queue<CustomerInformation> counter1Queue = new LinkedList<>();
+    private static Queue<CustomerInformation> counter2Queue = new LinkedList<>();
+    private static Queue<CustomerInformation> counter3Queue = new LinkedList<>();
+    private static Stack<CustomerInformation> completeStack = new Stack<>();
+    private static JFrame customerInfoFrame;
+
+    // Track the number of customers at each counter
+    private static int counter1Customers = 0;
+    private static int counter2Customers = 0;
+
+    // Entry point of the program
+    public static void main (String [] args) 
+    {
+        createWelcomePage();
+    }
+
+    // Load customer data from a file
+    private static void loadCustomerData() 
+    {
+        try (BufferedReader br = new BufferedReader(new FileReader("customer.txt"))) 
+        {
+            String line;
+
+            // Clear existing data structures before populating them
+            customerList.clear();
+            counter1Queue.clear();
+            counter2Queue.clear();
+            counter3Queue.clear();
+
+            // Read and process each line of the customer data file
+            while ((line = br.readLine()) != null) 
+            {
+                StringTokenizer st = new StringTokenizer(line, ";");
+                int custId = Integer.parseInt(st.nextToken());
+                String custName = st.nextToken();
+                String custAge = st.nextToken();
+                String custNum = st.nextToken();
+
+                // Create a new customer object
+                CustomerInformation customer = new CustomerInformation(custId, custName, custAge, custNum, 0);
+
+                while (st.hasMoreTokens()) 
+                {
+                    int numOfTix = Integer.parseInt(st.nextToken()); 
+                    String rideName = st.nextToken();
+                    String purchaseDate = st.nextToken();
+                    String ticketType = st.nextToken();
+
+                    // Create a new ticket object and add it to the customer
+                    TicketInformation ticket = new TicketInformation(numOfTix, rideName, 0, purchaseDate, ticketType, 0);
+                    customer.addTicket(ticket);
+
+                    // Assign the customer to a counter queue based on the number of tickets
+                    if (numOfTix <= 5) 
+                    {
+                        if (counter1Customers <= counter2Customers) 
+                        {
+                            counter1Queue.offer(customer);
+                            counter1Customers++;
+                        } 
+                        else 
+                        {
+                            counter2Queue.offer(customer);
+                            counter2Customers++;
+                        }
+                    } 
+                    else 
+                    {
+                        counter3Queue.offer(customer);
+                    }
+                }
+
+                // Add the customer to the list of all customers
+                customerList.add(customer);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Save customer data to a file
+    public static void saveCustomerData() 
+    {
+        try (FileWriter writer = new FileWriter("customer.txt")) 
+        {
+            for (CustomerInformation customer : customerList) 
+            {
+                // Write customer details to the file
+                writer.write(customer.getcustId() + ";" + customer.getcustName() + ";" +
+                    customer.getcustAge() + ";" + customer.getcustNum() + ";");
+
+                for (TicketInformation ticket : customer.getTickets()) 
+                {
+                    writer.write(
+                        ticket.getnumOfTix() + ";" + ticket.getrideName() + ";" +
+                        ticket.getpurchaseDate() + ";" + ticket.getticketType() + ";");
+                }
+
+                // Add a newline to separate each customer's data
+                writer.write("\n");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Create the main welcome page
+    private static void createWelcomePage() 
+    {
+        // Create a new JFrame to serve as the main window
+        JFrame frame = new JFrame("Thrilltopia Theme Park");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(600, 300);
+
+        // Create a welcome label with a specific font and alignment
+        JLabel welcomeLabel = new JLabel("\nWelcome to the Thrilltopia Ticketing System!");
+        welcomeLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        welcomeLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
+        // Create buttons for various system
+        JButton viewCustomerInfoButton = new JButton("View Customer Information");
+        viewCustomerInfoButton.addActionListener(new ActionListener() 
+            {
+                public void actionPerformed(ActionEvent e) 
+                {
+                    viewCustomerInformation();
+                }
+            });
+
+        JButton receiptButton = new JButton("Receipt");
+        receiptButton.addActionListener(new ActionListener() 
+            {
+                public void actionPerformed(ActionEvent e) 
+                {
+                    displayReceiptsFromStack();
+                }
+            });
+
+        JButton queueButton = new JButton("Queue");
+        queueButton.addActionListener(new ActionListener() 
+            {
+                public void actionPerformed(ActionEvent e) 
+                {
+                    displayCounterButtons();
+                }
+            });
+
+        JButton exitButton = new JButton("Exit");
+        exitButton.addActionListener(new ActionListener() 
+            {
+                public void actionPerformed(ActionEvent e) 
+                {
+                    System.exit(0);
+                }
+            });
+
+        // Create and configure panels for organizing components
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new FlowLayout());
+        buttonPanel.add(viewCustomerInfoButton);
+        buttonPanel.add(receiptButton);
+        buttonPanel.add(queueButton);
+        buttonPanel.add(exitButton);
+
+        JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new BorderLayout());
+        contentPanel.add(welcomeLabel, BorderLayout.NORTH);
+        contentPanel.add(buttonPanel, BorderLayout.CENTER);
+
+        // Add the content panel to the frame 
+        frame.add(contentPanel);
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
+
+    // Method to view customer information
+    private static void viewCustomerInformation() 
+    {
+        // Create a new JFrame for displaying customer information
+        customerInfoFrame = new JFrame("Customer Information");
+        customerInfoFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        customerInfoFrame.setSize(600, 400);
+
+        // Create a text area for displaying customer information
+        JTextArea customerInfoTextArea = new JTextArea();
+        customerInfoTextArea.setEditable(false);
+
+        // Iterate through the customer list and display customer details and ticket information
+        for (CustomerInformation customer : customerList) 
+        {
+            customerInfoTextArea.append("Customer ID: " + customer.getcustId() + "\n");
+            customerInfoTextArea.append("Name: " + customer.getcustName() + "\n");
+            customerInfoTextArea.append("Age: " + customer.getcustAge() + "\n");
+            customerInfoTextArea.append("Phone Number: " + customer.getcustNum() + "\n");
+
+            for (TicketInformation ticket : customer.getTickets()) 
+            {
+                customerInfoTextArea.append("Number Of Tickets: " + ticket.getnumOfTix() + "\n");
+                customerInfoTextArea.append("Ride Name: " + ticket.getrideName() + "\n");
+                customerInfoTextArea.append("Purchased Date: " + ticket.getpurchaseDate() + "\n");
+                customerInfoTextArea.append("Ticket Type: " + ticket.getticketType() + "\n\n");
+                customerInfoTextArea.append("------------------------------------------------\n");
+            }
+        }
+
+        // Create buttons for add customer information
+        JButton addCustomerButton = new JButton("Add Customer");
+        addCustomerButton.addActionListener(new ActionListener() 
+            {
+                public void actionPerformed(ActionEvent e) 
+                {
+                    // Prompt the user for customer information
+                    String id = JOptionPane.showInputDialog("Enter Customer ID:");
+                    String name = JOptionPane.showInputDialog("Enter Customer Name:");
+                    String age = JOptionPane.showInputDialog("Enter Customer Age:");
+                    String phoneNumber = JOptionPane.showInputDialog("Enter Phone Number:");
+                    String numOfTix = JOptionPane.showInputDialog("Number of Tickets:");
+                    String rideName = JOptionPane.showInputDialog("Ride Name:");
+                    String purchaseDate = JOptionPane.showInputDialog("Purchase Date:");
+                    String ticketType = JOptionPane.showInputDialog("Ticket Type:");
+
+                    CustomerInformation newCustomer = null;
+                    if (id != null && name != null && age != null && phoneNumber != null) 
+                    {
+                        int customerId = Integer.parseInt(id);
+                        newCustomer = new CustomerInformation(customerId, name, age, phoneNumber, 0);
+
+                        int numOfTickets = Integer.parseInt(numOfTix);
+                        TicketInformation ticket = new TicketInformation(numOfTickets, rideName, 0, purchaseDate, ticketType,0);
+                        newCustomer.addTicket(ticket);
+                    }
+
+                    if (newCustomer != null) 
+                    {
+                        // Add the new customer to the system and refresh the customer information
+                        addCustomer(newCustomer);
+                        loadCustomerData();
+                        refreshCustomerInformation();
+                    }
+                }
+            });
+
+        // Create buttons for remove ticket information
+        JButton removeCustomerButton = new JButton("Remove Customer");
+        removeCustomerButton.addActionListener(new ActionListener() 
+            {
+                public void actionPerformed(ActionEvent e) 
+                {
+                    // Prompt the user for the customer ID to remove
+                    String input = JOptionPane.showInputDialog("Enter Customer ID to remove:");
+                    if (input != null && !input.isEmpty()) 
+                    {
+                        int customerIdToRemove = Integer.parseInt(input);
+                        removeCustomer(customerIdToRemove);
+                    }
+
+                    // Remove the customer and refresh the customer information
+                    refreshCustomerInformation();
+                }
+            });
+
+        JButton backButton = new JButton("Back to Welcome Page");
+        backButton.addActionListener(new ActionListener() 
+            {
+                public void actionPerformed(ActionEvent e) 
+                {
+                    // Close the customer information window and return to the welcome page
+                    customerInfoFrame.dispose();
+                    createWelcomePage();
+                }
+            });
+
+        // Create a panel to hold the buttons
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new FlowLayout());
+        buttonPanel.add(removeCustomerButton);
+        buttonPanel.add(addCustomerButton);
+        buttonPanel.add(backButton);
+
+        // Add the customer information text area and button panel to the customer information frame
+        customerInfoFrame.add(new JScrollPane(customerInfoTextArea), BorderLayout.CENTER);
+        customerInfoFrame.add(buttonPanel, BorderLayout.SOUTH);
+
+        // Set the location of the customer information frame
+        customerInfoFrame.setLocationRelativeTo(null);
+        customerInfoFrame.setVisible(true);
+
+        // Load customer data from a file to ensure it's up-to-date
+        loadCustomerData();
+
+        // Push all customers onto the complete stack for future retrieval
+        for (CustomerInformation customer : customerList) 
+        {
+            completeStack.push(customer);        
+        }
+    }
+
+    // Method to add a customer to the system
+    private static void addCustomer(CustomerInformation customer) 
+    {
+        // Determine which counter queue to add the customer based on the number of tickets
+        if (customer.getTickets().size() <= 5) 
+        {
+            if (counter1Queue.size() <= counter2Queue.size())
+            {
+                counter1Queue.offer(customer);
+            } else 
+            {
+                counter2Queue.offer(customer);
+            }
+        } else 
+        {
+            counter3Queue.offer(customer);
+        }
+
+        // Add the customer to the list of all customers
+        customerList.add(customer);
+        // Save the updated customer data to a file
+        saveCustomerData();
+        // Clear and rebuild the complete stack with the updated customer list
+        completeStack.clear();
+
+        for (CustomerInformation updatedCustomer : customerList) 
+        {
+            completeStack.push(updatedCustomer);
+        }
+    }
+
+    // Method to remove a customer from the system
+    private static void removeCustomer(int customerId) 
+    {
+        // Iterate through the list of customers to find the one with the matching ID
+        for (CustomerInformation customer : customerList) 
+        {
+            if (customer.getcustId() == customerId) 
+            {
+                // Remove the customer with the matching ID and exit the loop
+                customerList.remove(customer);
+                break;
+            }
+        }
+
+        // Save the updated customer data to a file
+        saveCustomerData();
+    }
+
+    // Method to refresh customer information
+    private static void refreshCustomerInformation() 
+    {
+        customerInfoFrame.dispose();
+        viewCustomerInformation();
+    }
+
+    // Method to display counter buttons
+    private static void displayCounterButtons() 
+    {
+        // Create a new frame for selecting a counter queue
+        JFrame queueFrame = new JFrame("Queue Selection");
+        queueFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        queueFrame.setSize(400, 200);
+
+        // Create buttons for each counter
+
+        JButton counter1Button = new JButton("Counter 1");
+        counter1Button.addActionListener(new ActionListener() 
+            {
+                public void actionPerformed(ActionEvent e) {
+                    displayCounterQueue(counter1Queue);
+                }
+            });
+
+        JButton counter2Button = new JButton("Counter 2");
+        counter2Button.addActionListener(new ActionListener()
+            {
+                public void actionPerformed(ActionEvent e) 
+                {
+                    displayCounterQueue(counter2Queue);
+                }
+            });
+
+        JButton counter3Button = new JButton("Counter 3");
+        counter3Button.addActionListener(new ActionListener() 
+            {
+                public void actionPerformed(ActionEvent e) {
+                    displayCounterQueue(counter3Queue);
+                }
+            });
+
+        // Create a button to navigate back to the welcome page
+        JButton backButton = new JButton("Back to Welcome Page");
+        backButton.addActionListener(new ActionListener() 
+            {
+                public void actionPerformed(ActionEvent e) {
+                    customerInfoFrame.dispose();
+                    createWelcomePage();
+                }
+            });
+
+        // Create a panel to hold the buttons
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new FlowLayout());
+        buttonPanel.add(counter1Button);
+        buttonPanel.add(counter2Button);
+        buttonPanel.add(counter3Button);
+        buttonPanel.add(backButton);
+
+        // Add the button panel to the queue selection frame
+        queueFrame.add(buttonPanel);
+
+        // Set the location of the queue selection frame
+        queueFrame.setLocationRelativeTo(null);
+        queueFrame.setVisible(true);
+
+    }
+
+    // Calculate the total price for a given number of tickets based on the ride's name
+    private static double calculateTicketPrice(String rideName, int numOfTix) 
+    {
+        // Initialize the ticket price to 0.0
+        double ticketPrice = 0.0;
+
+        // Determine the ticket price based on the specified ride name
+        if (rideName.equals("Roller Coaster")) 
+        {
+            ticketPrice = 30.00;
+        } else if (rideName.equals("Ferris Wheel")) 
+        {
+            ticketPrice = 35.00;
+        } else if (rideName.equals("Bumper Cars")) 
+        {
+            ticketPrice = 25.00;
+        } else if (rideName.equals("Haunted House"))
+        {
+            ticketPrice = 20.00;
+        } else if (rideName.equals("Go-Karts")) 
+        {
+            ticketPrice = 40.00;
+        } else 
+        {   // Handle the case of an invalid ride name
+            System.out.println("Invalid ride name: " + null);
+        }
+
+        // Calculate the total payment based on the ticket price and the number of tickets
+        double totalPayment = ticketPrice * numOfTix;
+        return totalPayment;
+    }    
+
+    // Display receipts for customers from the stack of complete transactions
+    private static void displayReceiptsFromStack() 
+    {
+        // Create a new frame for displaying receipts
+        JFrame receiptFrame = new JFrame("Receipts");
+        receiptFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        receiptFrame.setSize(600, 400);
+
+        // Create a text area for displaying receipts 
+        JTextArea receiptTextArea = new JTextArea();
+        receiptTextArea.setEditable(false);
+
+        // Create a temporary stack to store and reverse the order of customers
+        Stack<CustomerInformation> tempStack = new Stack<>(); 
+
+        // Display receipts for each customer and their associated tickets
+        while (!completeStack.isEmpty()) 
+        {
+            tempStack.push(completeStack.pop());
+        }
+
+        while (!tempStack.isEmpty()) 
+        {
+            CustomerInformation customer = tempStack.pop();
+            receiptTextArea.append("Customer ID: " + customer.getcustId() + "\n");
+            receiptTextArea.append("Name: " + customer.getcustName() + "\n");
+            receiptTextArea.append("Age: " + customer.getcustAge() + "\n");
+            receiptTextArea.append("Phone Number: " + customer.getcustNum() + "\n");
+
+            for (TicketInformation ticket : customer.getTickets()) 
+            {
+                receiptTextArea.append("Number of Tickets: " + ticket.getnumOfTix() + "\n");
+                receiptTextArea.append("Ride Name: " + ticket.getrideName() + "\n");
+                receiptTextArea.append("Purchase Date: " + ticket.getpurchaseDate() + "\n");
+                receiptTextArea.append("Ticket Type: " + ticket.getticketType() + "\n\n");
+                // Calculate and display the total payment for the ticket
+                receiptTextArea.append("Total Payment: RM " + calculateTicketPrice(ticket.getrideName(), ticket.getnumOfTix()) + "\n");
+                receiptTextArea.append("------------------------------------------------\n");
+            }
+        }
+
+        // Create a button to navigate back to the welcome page
+        JButton backButton = new JButton("Back to Welcome Page");
+        backButton.addActionListener(new ActionListener() 
+            {
+                public void actionPerformed(ActionEvent e) 
+                {
+                    receiptFrame.dispose();
+                    createWelcomePage(); 
+                }
+            });
+
+        // Create a panel for the back button and add it to the frame
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new FlowLayout());
+        buttonPanel.add(backButton);
+        receiptFrame.add(new JScrollPane(receiptTextArea), BorderLayout.CENTER);
+        receiptFrame.add(buttonPanel, BorderLayout.SOUTH);
+
+        // Set the location of the receipt frame
+        receiptFrame.setLocationRelativeTo(null);
+        receiptFrame.setVisible(true);
+    }
+
+    // Display the customer queue for a specific counter
+    private static void displayCounterQueue(Queue<CustomerInformation> counterQueue) 
+    {
+        Stack<CustomerInformation> tempStack = new Stack<>();
+        tempStack.addAll(completeStack);
+
+        // Display receipts from tempStack
+        while (!tempStack.isEmpty()) {
+            CustomerInformation customer = tempStack.pop();
+            // Display customer receipts
+        }
+
+        // Create a new frame for displaying the customer queue for a specific counter
+        JFrame counterFrame = new JFrame("Counter Queue");
+        counterFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        counterFrame.setSize(600, 400);
+
+        // Create a text area for displaying the customer queue
+        JTextArea queueTextArea = new JTextArea();
+        queueTextArea.setEditable(false);
+
+        // Iterate through the customer queue and display customer information and ticket details
+        for (CustomerInformation customer : counterQueue) 
+        {
+            queueTextArea.append("Customer ID: " + customer.getcustId() + "\n");
+            queueTextArea.append("Name: " + customer.getcustName() + "\n");
+            queueTextArea.append("Age: " + customer.getcustAge() + "\n");
+            queueTextArea.append("Phone Number: " + customer.getcustNum() + "\n");
+
+            for (TicketInformation ticket : customer.getTickets()) 
+            {
+                queueTextArea.append("Number Of Tickets: " + ticket.getnumOfTix() + "\n");
+                queueTextArea.append("Ride Name: " + ticket.getrideName() + "\n");
+                queueTextArea.append("Purchased Date: " + ticket.getpurchaseDate() + "\n");
+                queueTextArea.append("Ticket Type: " + ticket.getticketType() + "\n\n");
+                queueTextArea.append("Total Payment: RM " + calculateTicketPrice(ticket.getrideName(), ticket.getnumOfTix()) + "\n");
+                queueTextArea.append("---------------------------------------------------\n");
+            }
+        }
+
+        // Create a button to navigate back to the queue selection
+        JButton backButton = new JButton("Back to Queue Selection");
+        backButton.addActionListener(new ActionListener() 
+            {
+                public void actionPerformed(ActionEvent e) 
+                {
+                    counterFrame.dispose();
+                    displayCounterButtons();
+                }
+            });
+
+        // Create a panel for the back button and add it to the frame
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new FlowLayout());
+        buttonPanel.add(backButton);
+        counterFrame.add(new JScrollPane(queueTextArea), BorderLayout.CENTER);
+        counterFrame.add(buttonPanel, BorderLayout.SOUTH);
+
+        // Set the location of the counter frame and make it visible
+        counterFrame.setLocationRelativeTo(null);
+        counterFrame.setVisible(true);
+    }
+}
